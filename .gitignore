@@ -1,0 +1,6 @@
+.python-version
+dist/*
+build/*
+*.egg*
+__pycache__/
+*.ipynb

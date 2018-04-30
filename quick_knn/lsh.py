@@ -13,7 +13,6 @@ def integrate(func, a, b, dt=0.001):
 def fp_prob(thresh, b, r):
     def probs(s):
         return 1 - (1 - s ** r) ** b
-
     return integrate(probs, 0.0, thresh)
 
 
@@ -42,12 +41,14 @@ def opt_b_r(thresh, bits, fp_weight, fn_weight):
 
 class LSH(object):
 
-    def __init__(self, threshold=0.51, bits=32):
+    def __init__(self, threshold=0.51, bits=32, fp_weight=0.5, fn_weight=0.5):
         super().__init__()
 
         self.threshold = threshold
         self.bits = bits
-        self.b, self.r = opt_b_r(threshold, bits, 0.5, 0.5)
+        self.fp_weight = fp_weight
+        self.fn_weight = fn_weight
+        self.b, self.r = opt_b_r(threshold, bits, fp_weight, fn_weight)
 
         self.ranges = [(i * self.r, (i + 1) * self.r) for i in range(self.b)]
         self.tables = [defaultdict(set) for _ in range(self.b)]

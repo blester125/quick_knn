@@ -6,3 +6,6 @@ build/*
 *.so
 __pycache__/
 */.ipynb_checkpoints/
+*.npy
+*.p
+*/data/*

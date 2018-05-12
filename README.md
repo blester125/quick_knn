@@ -1,5 +1,4 @@
-# LSH
-##
+# Quick Knn
 
 Locality Sensitive hash functions
 

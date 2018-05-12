@@ -6,6 +6,8 @@ build/*
 *.so
 __pycache__/
 */.ipynb_checkpoints/
-*.npy
+.pytest_cache/
+*.html
 *.p
 */data/*
+*.npy

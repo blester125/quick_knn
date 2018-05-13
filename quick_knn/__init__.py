@@ -1,4 +1,4 @@
-__version__ = '0.1.3'
+__version__ = '0.1.4'
 
 from quick_knn.min_hash import MinHash
 from quick_knn.random_hyperplane import RandomHyperplanes

@@ -9,5 +9,5 @@ __pycache__/
 .pytest_cache/
 *.html
 *.p
-*/data/*
 *.npy
+*/data/*

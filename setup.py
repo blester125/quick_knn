@@ -2,7 +2,7 @@ import re
 from setuptools import setup, find_packages
 
 def get_version(project_name):
-    regex = re.compile(r"^__version__ = '(\d+\.\d+\.\d+)'$")
+    regex = re.compile(r"^__version__ = '(\d+\.\d+\.\d+(?:a|b|rc)?(?:\d)*?)'$")
     with open(f"{project_name}/__init__.py") as f:
         for line in f:
             m = regex.match(line)
@@ -41,10 +41,13 @@ setup(
     },
     include_package_data=True,
     install_requires=[
-        "numpy"
+        'numpy'
     ],
     setup_requires=[
     ],
+    extras_requires={
+        'test': ['pytest'],
+    },
     keywords=["Data Mining"],
     ext_modules=ext_modules,
     classifiers={

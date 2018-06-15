@@ -1,20 +1,19 @@
+import argparse
+from functools import partial
 import numpy as np
 import matplotlib.pyplot as plt
 from quick_knn.lsh import integrate, fp_prob, fn_prob
 
-"""
-`fp_probs` represents the probability of a false positive meaning a set that has a jaccard similarity less than thresh while `fn_probs` is the probability of a set that has a jaccard higher than threshold not being returned.
+parser = argparse.ArgumentParser()
+parser.add_argument("--thresh", "-t", default=0.51, type=float)
+parser.add_argument("--bits", "-b", default=4, type=int)
+parser.add_argument("--fp_weight", "-fp", default=0.5, type=float)
+args = parser.parse_args()
 
-To find the optimal b and r we integrate these function and try to minimize the area under these curves
-"""
-
-def fp_probs(s, b, r):
-    return 1 - (1 - s ** r) ** b
-
-def fn_probs(s, b, r):
-    return 1 - (1 - (1 - s ** r) ** b)
-
-bits = 4
+bits = args.bits
+thresh = args.thresh
+fp_weight = args.fp_weight
+fn_weight = 1.0 - fp_weight
 
 bs = []
 rs = []
@@ -31,15 +30,17 @@ rs = np.array(rs)
 fig, ax = plt.subplots(2, len(bs) // 2)
 ax = ax.ravel()
 
-thresh = 0.51
 xp = np.linspace(0, thresh, 500)
 xn = np.linspace(thresh, 1.0, 500)
 
-for i, (b, r) in enumerate(zip(bs, rs)):
-    error = fp_prob(thresh, bs, rs) + fn_prob(thresh, bs, rs)
+fp_ = partial(fp_prob, bs, rs)
+fn_ = partial(fn_prob, bs, rs)
+error = integrate(fp_, 0.0, thresh) * fp_weight + integrate(fn_, thresh, 1.0) * fn_weight
 
-    yp = fp_probs(xp, b, r)
-    yn = fn_probs(xn, b, r)
+for i, (b, r) in enumerate(zip(bs, rs)):
+
+    yp = fp_prob(b, r, xp)
+    yn = fn_prob(b, r, xn)
 
     ax[i].plot(xp, yp)
     ax[i].plot(xn, yn)

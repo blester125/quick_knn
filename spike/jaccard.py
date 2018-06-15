@@ -4,7 +4,6 @@ import random
 import argparse
 from functools import partial
 from quick_knn import LSH, MinHash
-from datasketch import MinHashLSH as LSH2, MinHash as MH
 
 CRAN_FILE = "data/cran.all.1400"
 
@@ -51,18 +50,13 @@ def encode(d, mh):
     return my
 
 
-def encode2(d, bits):
-    mh2 = MH(bits)
-    for x in d:
-        mh2.update(x)
-    return mh2
-
-
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--thresh", "-t", default = 0.59, type=float)
-    parser.add_argument("--bits", "-b", default = 125, type=int)
+    parser.add_argument("--bits", "-b", default = 1024, type=int)
     parser.add_argument("--seed", "-s", default=5777, type=int)
+    parser.add_argument("--fp_weight", "-fp", default=0.5, type=float)
+    parser.add_argument("--fn_weight", "-fn", default=0.5, type=float)
     args = parser.parse_args()
     random.seed(args.seed)
 
@@ -79,20 +73,15 @@ def main():
     print(f"Naive Time: {time.time() - t0}")
 
     # LSH
-    lsh = LSH(args.thresh, args.bits)
+    lsh = LSH(args.thresh, args.bits, args.fp_weight, args.fn_weight)
+    print(lsh)
     mh = MinHash(args.bits)
-
-    lsh2 = LSH2(args.thresh, args.bits)
 
     t0 = time.time()
     for i, d in enumerate(data):
         my = encode(d, mh)
         lsh.insert(i, my)
     build_time = time.time() - t0
-
-    for i, d in enumerate(data):
-        mh2 = encode2(d, args.bits)
-        lsh2.insert(i, mh2)
 
     t0 = time.time()
     res = []
@@ -101,24 +90,12 @@ def main():
         res.append(lsh.query(my))
     query_time = time.time() - t0
 
-    res2 = []
-    for query in queries:
-        mh2 = encode2(d, args.bits)
-        res2.append(lsh2.query(mh2))
-
     m_score = []
-    t_score = []
-    for i, (g, r, r2) in enumerate(zip(gold, res, res2)):
+    for i, (g, r) in enumerate(zip(gold, res)):
         print(f"Query: {i + 1}")
         print("Mine")
         m_score.append(f1(g, r))
         print()
-        print("DataSketch")
-        t_score.append(f1(g, r2))
-        print()
-
-    beat = len([x for (x, y) in zip(m_score, t_score) if x > y])
-    print(f"My LSH beat datasketch {beat / len(m_score) * 100}% of the time")
 
     print(f"\nLSH Build time: {build_time}, Query time: {query_time} Total time {build_time + query_time}")
 

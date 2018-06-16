@@ -1,7 +1,7 @@
 import struct
 from hashlib import sha1
 import numpy as np
-from quick_knn.data import signature, hashable
+from quick_knn.type_hints import Signature, Hashable
 
 PRIME = (1 << 61) - 1
 MAX = (1 << 32) - 1
@@ -17,9 +17,9 @@ class MinHash(object):
         self.a = r.randint(1, PRIME, dtype=np.uint64, size=self.bits)
         self.b = r.randint(0, PRIME, dtype=np.uint64, size=self.bits)
 
-    def __call__(self, bs: hashable, old: signature=None) -> signature:
+    def __call__(self, bs: Hashable, old: Signature=None) -> Signature:
         if isinstance(bs, str):
-            bs = bs.encode()
+            bs = bs.encode('utf-8')
             return self.signature(bs, old)
         if isinstance(bs, bytes):
             return self.signature(bs, old)
@@ -29,12 +29,12 @@ class MinHash(object):
             old = self.signature(b, old)
         return old
 
-    def _hash(self, b: bytes) -> signature:
+    def _hash(self, b: bytes) -> Signature:
         hash_values = struct.unpack('<I', sha1(b).digest()[:BYTES])[0]
         perm_hash_values = np.bitwise_and((self.a * hash_values + self.b) % PRIME, np.uint64(MAX))
         return perm_hash_values
 
-    def signature(self, b: bytes, old: signature=None) -> signature:
+    def signature(self, b: bytes, old: Signature=None) -> Signature:
         if old is None:
             old = self.default
         return np.minimum(self._hash(b), old)
@@ -43,12 +43,12 @@ class MinHash(object):
         return self.bits
 
 
-def count(hashes: signature) -> float:
+def count(hashes: Signature) -> float:
     """http://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=365694"""
     return len(hashes) / np.sum(hashes / MAX) - 1.0
 
 
-def jaccard(mh1: signature, mh2: signature) -> float:
+def jaccard(mh1: Signature, mh2: Signature) -> float:
     return np.sum(mh1 == mh2) / len(mh1)
 
 

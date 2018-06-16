@@ -1,11 +1,11 @@
 from functools import partial
+from typing import Tuple, List
 from collections import defaultdict
 import numpy as np
-from quick_knn.data import signature, Key
+from quick_knn.type_hints import Signature, Integrable, Key, Vector
 
-from typing import Callable, Tuple, List
 
-def integrate(func: Callable[[float], float], a: float, b: float, dt: float=0.001):
+def integrate(func: Integrable, a: float, b: float, dt: float=0.001) -> float:
     """Midpoint Riemann Sum Integration."""
     area = 0.0
     while a < b:
@@ -13,7 +13,7 @@ def integrate(func: Callable[[float], float], a: float, b: float, dt: float=0.00
         a += dt
     return area
 
-def fp_prob(b, r, s):
+def fp_prob(b: Vector, r: Vector, s: float) -> Vector:
     # s is Jaccard similarity of two sets
     # s is the probability of a minhash agreeing
     # s^r is the prob of matching at each row in a band of size r
@@ -22,7 +22,7 @@ def fp_prob(b, r, s):
     # 1 - (1 - s^r)^b is the prob of matching in at least one band
     return 1 - (1 - s ** r) ** b
 
-def fn_prob(b, r, s):
+def fn_prob(b: Vector, r: Vector, s: float) -> Vector:
     # As above (1 - s^r)^b is the probability of having a mismatch in each band.
     return (1 - s ** r) ** b
 
@@ -87,12 +87,12 @@ class LSH(object):
             f"b={self.b}, r={self.r})"
         )
 
-    def insert(self, key, sig: signature) -> None:
+    def insert(self, key: Key, sig: Signature) -> None:
         parts = [LSH.hashable(sig[start:end]) for start, end in self.ranges]
         for part, table in zip(parts, self.tables):
             table[part].add(key)
 
-    def query(self, sig: signature) -> List[Key]:
+    def query(self, sig: Signature) -> List[Key]:
         cands = set()
         for (start, end), table in zip(self.ranges, self.tables):
             part = LSH.hashable(sig[start:end])
@@ -101,5 +101,5 @@ class LSH(object):
         return list(cands)
 
     @staticmethod
-    def hashable(hs: signature) -> bytes:
+    def hashable(hs: Signature) -> bytes:
         return bytes(hs.data)

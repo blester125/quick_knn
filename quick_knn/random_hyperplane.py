@@ -1,5 +1,5 @@
 import numpy as np
-from quick_knn.data import signature
+from quick_knn.type_hints import Signature
 
 class RandomHyperplanes(object):
 
@@ -9,14 +9,14 @@ class RandomHyperplanes(object):
         self.dim = dim
         self.planes = np.random.randn(self.dim, self.bits)
 
-    def __call__(self, data: np.ndarray) -> signature:
+    def __call__(self, data: np.ndarray) -> Signature:
         return self.signature(data)
 
-    def signature(self, data: np.ndarray) -> signature:
+    def signature(self, data: np.ndarray) -> Signature:
         return (np.dot(data, self.planes) >= 0).astype(np.uint8)
 
 
-def cosine(query: signature, dataset: signature) -> float:
+def cosine(query: Signature, dataset: Signature) -> float:
     return 1 - np.mean(np.logical_xor(query, dataset), axis=1)
 
 

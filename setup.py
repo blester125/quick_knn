@@ -45,7 +45,7 @@ setup(
     ],
     setup_requires=[
     ],
-    extras_requires={
+    extras_require={
         'test': ['pytest'],
     },
     keywords=["Data Mining"],

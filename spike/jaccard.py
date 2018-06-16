@@ -56,7 +56,6 @@ def main():
     parser.add_argument("--bits", "-b", default = 1024, type=int)
     parser.add_argument("--seed", "-s", default=5777, type=int)
     parser.add_argument("--fp_weight", "-fp", default=0.5, type=float)
-    parser.add_argument("--fn_weight", "-fn", default=0.5, type=float)
     args = parser.parse_args()
     random.seed(args.seed)
 
@@ -73,7 +72,7 @@ def main():
     print(f"Naive Time: {time.time() - t0}")
 
     # LSH
-    lsh = LSH(args.thresh, args.bits, args.fp_weight, args.fn_weight)
+    lsh = LSH(args.thresh, args.bits, args.fp_weight)
     print(lsh)
     mh = MinHash(args.bits)
 

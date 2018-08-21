@@ -2,6 +2,7 @@ from functools import partial
 from typing import Tuple, List
 from collections import defaultdict
 import numpy as np
+from quick_knn.data import SQLData, PickleData, sniff
 from quick_knn.type_hints import Signature, Integrable, Key, Vector
 
 
@@ -64,7 +65,7 @@ def opt_b_r(thresh: float, bits: int, fp_weight: float, fn_weight: float) -> Tup
 class LSH(object):
     """Banding based LSH as described in http://www.mmds.org/"""
 
-    def __init__(self, threshold: float=0.51, bits: int=32, fp_weight: float=0.5):
+    def __init__(self, threshold: float=0.51, bits: int=32, fp_weight: float=0.5, name="lsh", t="pickle"):
         super().__init__()
 
         assert threshold <= 1.0 and threshold >= 0.0, f"threshold must be in [0.0, 1.0], got {threshold}"
@@ -78,7 +79,10 @@ class LSH(object):
         self.b, self.r = opt_b_r(threshold, bits, self.fp_weight, self.fn_weight)
 
         self.ranges = [(i * self.r, j * self.r) for i, j in zip(range(self.b), range(1, self.b + 1))]
-        self.tables = [defaultdict(set) for _ in range(self.b)]
+        if t == "pickle":
+            self.data = PickleData(name, self.b)
+        else:
+            self.data = SQLData(name, in_memory=True)
 
     def __repr__(self):
         return (
@@ -89,17 +93,21 @@ class LSH(object):
 
     def insert(self, key: Key, sig: Signature) -> None:
         parts = [LSH.hashable(sig[start:end]) for start, end in self.ranges]
-        for part, table in zip(parts, self.tables):
-            table[part].add(key)
+        self.data.insert(parts, key)
 
     def query(self, sig: Signature) -> List[Key]:
-        cands = set()
-        for (start, end), table in zip(self.ranges, self.tables):
-            part = LSH.hashable(sig[start:end])
-            for key in table[part]:
-                cands.add(key)
+        parts = [LSH.hashable(sig[start:end]) for start, end in self.ranges]
+        cands = self.data.get(parts)
         return list(cands)
 
     @staticmethod
     def hashable(hs: Signature) -> bytes:
         return bytes(hs.data)
+
+    def save(self, hasher):
+        self.data.save(self, hasher)
+
+    @classmethod
+    def restore(cls, name):
+        data = sniff(name)
+        return data.restore(name)

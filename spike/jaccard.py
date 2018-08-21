@@ -72,7 +72,7 @@ def main():
     print(f"Naive Time: {time.time() - t0}")
 
     # LSH
-    lsh = LSH(args.thresh, args.bits, args.fp_weight)
+    lsh = LSH(args.thresh, args.bits, args.fp_weight, name="cran.lsh.db", t="sql")
     print(lsh)
     mh = MinHash(args.bits)
 

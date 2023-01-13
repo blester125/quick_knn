@@ -13,24 +13,6 @@ from quick_knn.hashes.random_hyperplanes import RandomHyperplanesBase
 MAX = (1 << 64) - 1
 
 
-def float_to_bits(f: float) -> int:
-    """Convert float to the bit representation for a 'hash'."""
-    # Neither struct or ctypes is available in numba
-    # Enforce big endian to be consistent across computers.
-    # return ctypes.c_uint64.from_buffer(ctypes.c_double(f)).value
-    # Pack the float into bytes and then unpack into a long. Like the pointer
-    # cast from Quake fast inverse sqrt.
-    # TODO: Does a using a float32 like this cause issues with hashing? Are only
-    # half of our buckets used?
-    bits = struct.pack(">f", f)
-    return struct.unpack(">l", bits)[0]
-
-
-def pool_hash(feature, offset: int) -> int:
-    """A hash function that mixes the feature and a particular hash family member."""
-    return float_to_bits(feature) ^ int(offset)
-
-
 class PoolingRandomHyperPlanes(RandomHyperplanesBase):
     def __init__(self, signature_size: int, pool_size: int, seed: int):
         super().__init__(signature_size, seed)
@@ -53,8 +35,8 @@ class PoolingRandomHyperPlanes(RandomHyperplanesBase):
         for i in range(self.signature_size):
             dot = np.sum(
                 [
-                    self.pool[pool_hash(f, self.hash_offsets[i]) % self.pool_size]
-                    for f in x
+                    self.pool[(j ^ self.hash_offsets[i]) % self.pool_size] * f
+                    for j, f in enumerate(x)
                 ]
             )
             signature[i] = 1 if dot >= 0 else 0
